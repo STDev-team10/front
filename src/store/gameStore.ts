@@ -472,6 +472,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (isLastStage) {
         const { timeAttackStartedAt } = get();
         if (user?.token && difficulty && timeAttackStartedAt) {
+          const token = user.token;
           const clearTimeMs = Date.now() - timeAttackStartedAt;
 
           set({
@@ -483,11 +484,11 @@ export const useGameStore = create<GameState>((set, get) => ({
             timeAttackError: '',
           });
 
-          void saveTimeAttackRecord(user.token, playMode, difficulty, clearTimeMs)
+          void saveTimeAttackRecord(token, playMode, difficulty, clearTimeMs)
             .then(async record => {
               const [ranking, best] = await Promise.all([
-                fetchTimeAttackRanking(user.token, playMode, difficulty, 10),
-                fetchMyTimeAttackBest(user.token, playMode, difficulty),
+                fetchTimeAttackRanking(token, playMode, difficulty, 10),
+                fetchMyTimeAttackBest(token, playMode, difficulty),
               ]);
 
               set({
