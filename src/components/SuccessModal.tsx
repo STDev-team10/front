@@ -25,6 +25,8 @@ export default function SuccessModal() {
   const timeAttackPending = useGameStore(s => s.timeAttackPending);
   const timeAttackError = useGameStore(s => s.timeAttackError);
   const user = useGameStore(s => s.user);
+  const newHallOfFameDiscovery = useGameStore(s => s.newHallOfFameDiscovery);
+  const clearHallOfFameDiscovery = useGameStore(s => s.clearHallOfFameDiscovery);
 
   if (!compound || (phase !== 'success' && phase !== 'gameover' && phase !== 'fail')) return null;
 
@@ -75,6 +77,12 @@ export default function SuccessModal() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+            {newHallOfFameDiscovery && (
+              <div className={styles.hofBanner}>
+                🏆 명예의 전당 최초 발견!
+                <button className={styles.hofClose} onClick={clearHallOfFameDiscovery}>✕</button>
               </div>
             )}
             <button className={styles.nextBtn} onClick={isSandbox ? dismissResult : hasMore ? nextStage : goToMenu}>

@@ -23,11 +23,19 @@ const MODES = [
     description: '문제 없이 바로 실험 화면으로 들어가고, 플레이 중에도 도감을 펼쳐볼 수 있어요.',
     actionLabel: '바로 시작',
   },
+  {
+    id: 'hall-of-fame',
+    emoji: '🏆',
+    title: '명예의 전당',
+    description: '다른 유저들이 먼저 발견한 특별한 이미지들을 확인해보세요.',
+    actionLabel: '입장하기',
+  },
 ] as const;
 
 export default function ModeSelectScreen() {
   const user = useGameStore(s => s.user);
   const logout = useGameStore(s => s.logout);
+  const goToHallOfFame = useGameStore(s => s.goToHallOfFame);
   const selectPlayMode = useGameStore(s => s.selectPlayMode);
   const startSandbox = useGameStore(s => s.startSandbox);
 
@@ -51,9 +59,15 @@ export default function ModeSelectScreen() {
           const enabled = true;
           return (
             <button
-              key={mode.id}
+              key={String(mode.id)}
               className={`${styles.modeCard} ${enabled ? styles.modeEnabled : styles.modeDisabled}`}
-              onClick={enabled ? (mode.id === 'sandbox' ? () => void startSandbox() : () => selectPlayMode(mode.id)) : undefined}
+              onClick={enabled
+                ? mode.id === 'sandbox'
+                  ? () => void startSandbox()
+                  : mode.id === 'hall-of-fame'
+                    ? goToHallOfFame
+                    : () => selectPlayMode(mode.id)
+                : undefined}
               disabled={!enabled}
             >
               <div className={styles.modeHead}>

@@ -132,3 +132,27 @@
 .nextBtn:active {
   transform: translateY(1px);
 }
+
+.hofBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff8e1;
+  border: 1.5px solid #f59e0b;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #92400e;
+  gap: 8px;
+}
+
+.hofClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #92400e;
+  padding: 0;
+  line-height: 1;
+}

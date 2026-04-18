@@ -9,6 +9,7 @@ export interface Compound {
   elements: Record<string, number>;
   available_elements: string[];
   difficulty: Difficulty;
+  hall_of_fame_item_id?: string | null;
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {

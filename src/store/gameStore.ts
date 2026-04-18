@@ -9,11 +9,12 @@ import {
   type TimeAttackRecordResponse,
   unlockCompound,
 } from '../api/compounds';
+import { unlockHallOfFameItem } from '../api/hallOfFame';
 import { type Compound, type Difficulty } from '../data/compounds';
 
 export type GamePhase =
   | 'auth-landing' | 'auth-login' | 'auth-signup'
-  | 'mode-menu' | 'menu' | 'dogan'
+  | 'mode-menu' | 'hall-of-fame' | 'menu' | 'dogan'
   | 'mimic-preview' | 'playing' | 'success' | 'fail' | 'gameover';
 
 export interface User {
@@ -97,6 +98,9 @@ interface GameState {
   myTimeAttackBest: TimeAttackRankingEntry | null;
   timeAttackPending: boolean;
   timeAttackError: string;
+  newHallOfFameDiscovery: boolean;
+
+  clearHallOfFameDiscovery: () => void;
 
   // auth
   goToLogin: () => void;
@@ -107,6 +111,7 @@ interface GameState {
   logout: () => void;
   loadCompounds: (difficulty?: Difficulty) => Promise<Compound[]>;
   goToModeMenu: () => void;
+  goToHallOfFame: () => void;
   goToLevelMenu: () => void;
   selectPlayMode: (mode: PlayMode) => void;
   startSandbox: () => Promise<void>;
@@ -224,6 +229,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   myTimeAttackBest: null,
   timeAttackPending: false,
   timeAttackError: '',
+  newHallOfFameDiscovery: false,
+
+  clearHallOfFameDiscovery: () => set({ newHallOfFameDiscovery: false }),
 
   goToLogin: () => set({ phase: 'auth-login', authError: '' }),
   goToSignup: () => set({ phase: 'auth-signup', authError: '' }),
@@ -315,6 +323,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   goToModeMenu: () => set({ phase: 'mode-menu', doganReturnPhase: 'mode-menu' }),
+  goToHallOfFame: () => set({ phase: 'hall-of-fame', doganReturnPhase: 'hall-of-fame' }),
   goToLevelMenu: () => set({ phase: 'menu', doganReturnPhase: 'menu' }),
   selectPlayMode: (playMode) => set({ playMode, phase: 'menu', doganReturnPhase: 'menu' }),
 
@@ -460,6 +469,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       const isLastStage = get().remainingCompounds.length === 0;
       if (user?.token) {
         void unlockCompound(currentCompound.id, user.token).catch(() => undefined);
+        if (currentCompound.hall_of_fame_item_id) {
+          const hofId = currentCompound.hall_of_fame_item_id;
+          void unlockHallOfFameItem(hofId, user.token)
+            .then(result => { if (result.unlocked) set({ newHallOfFameDiscovery: true }); })
+            .catch(() => undefined);
+        }
       } else {
         saveUnlocked(next);
       }
