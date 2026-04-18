@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { fetchCompoundExplanation } from '../api/ask';
+import MoleculeViewer from './MoleculeViewer';
 import styles from './SuccessModal.module.css';
 
 function formatTime(ms: number) {
@@ -60,9 +61,11 @@ export default function SuccessModal() {
       <div className={styles.card}>
         {isSuccess && (
           <>
-            <div className={styles.imgBox}>
-              <span className={styles.emoji}>{compound.emoji}</span>
-            </div>
+            <MoleculeViewer
+              formula={compound.formula}
+              compoundId={compound.id}
+              fallbackEmoji={compound.emoji}
+            />
             <h2 className={styles.compoundName}>{compound.name}</h2>
             {showFormula && <p className={styles.formula}>{compound.formula}</p>}
             <div className={styles.descBox}>
