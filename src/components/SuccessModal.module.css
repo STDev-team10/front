@@ -156,3 +156,26 @@
   padding: 0;
   line-height: 1;
 }
+
+.aiBox {
+  width: 100%;
+  min-height: 1.2rem;
+}
+
+.aiLoading {
+  font-size: 0.82rem;
+  color: #a08070;
+  margin: 0;
+  text-align: center;
+}
+
+.aiText {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #5c3d2e;
+  background: #fff8f0;
+  border-left: 3px solid #e8c9a0;
+  border-radius: 0 10px 10px 0;
+  padding: 10px 14px;
+  margin: 0;
+}

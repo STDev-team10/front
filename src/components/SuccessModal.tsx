@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { fetchCompoundExplanation } from '../api/ask';
 import styles from './SuccessModal.module.css';
 
 function formatTime(ms: number) {
@@ -28,10 +30,23 @@ export default function SuccessModal() {
   const newHallOfFameDiscovery = useGameStore(s => s.newHallOfFameDiscovery);
   const clearHallOfFameDiscovery = useGameStore(s => s.clearHallOfFameDiscovery);
 
-  if (!compound || (phase !== 'success' && phase !== 'gameover' && phase !== 'fail')) return null;
-
   const isSuccess = phase === 'success';
   const isGameOver = phase === 'gameover';
+
+  const [aiExplanation, setAiExplanation] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isSuccess || !compound) return;
+    setAiExplanation('');
+    setAiLoading(true);
+    fetchCompoundExplanation(compound.name)
+      .then(setAiExplanation)
+      .catch(() => undefined)
+      .finally(() => setAiLoading(false));
+  }, [compound?.name, isSuccess]);
+
+  if (!compound || (phase !== 'success' && phase !== 'gameover' && phase !== 'fail')) return null;
   const isFail = phase === 'fail';
   const hasMore = remainingCompounds.length > 0;
   const showFormula = playMode !== 'hardcore';
@@ -54,6 +69,10 @@ export default function SuccessModal() {
               <p className={styles.desc}>
                 {isSandbox ? `"${compound.name}" 도감이 해제되었어요!` : `"${compound.description}"`}
               </p>
+            </div>
+            <div className={styles.aiBox}>
+              {aiLoading && <p className={styles.aiLoading}>✨ AI 설명 불러오는 중...</p>}
+              {!aiLoading && aiExplanation && <p className={styles.aiText}>{aiExplanation}</p>}
             </div>
             {showTimeAttack && (
               <div className={styles.timeAttackBox}>
