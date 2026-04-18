@@ -12,10 +12,10 @@ export interface Compound {
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  easy: '유치원~초등 (순한맛)',
-  medium: '중학교 (보통맛)',
-  hard: '고등학교 (매운맛)',
-  mimic: '미믹 (기억력 테스트)',
+  easy: '초보 (순한맛)',
+  medium: '중수 (보통맛)',
+  hard: '고수 (매운맛)',
+  mimic: '전문가 (기억력 테스트)',
 };
 
 export const DIFFICULTY_EMOJIS: Record<Difficulty, string> = {

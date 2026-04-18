@@ -4,7 +4,7 @@ import { type Compound, type Difficulty } from '../data/compounds';
 
 export type GamePhase =
   | 'auth-landing' | 'auth-login' | 'auth-signup'
-  | 'menu' | 'dogan'
+  | 'mode-menu' | 'menu' | 'dogan'
   | 'mimic-preview' | 'playing' | 'success' | 'fail' | 'gameover';
 
 export interface User {
@@ -12,6 +12,15 @@ export interface User {
   token?: string;
   isGuest: boolean;
 }
+
+export type PlayMode = 'normal' | 'hardcore' | 'sandbox';
+
+const DEFAULT_LIVES = 3;
+const HARDCORE_LIVES = 1;
+const DEFAULT_STAGE_SCORE = 100;
+const HARDCORE_STAGE_SCORE = 150;
+
+type DoganReturnPhase = Exclude<GamePhase, 'dogan'>;
 
 function loadSession(): User | null {
   try {
@@ -53,6 +62,8 @@ interface GameState {
   compoundsTotal: number;
   compoundsPending: boolean;
   compoundsError: string;
+  playMode: PlayMode;
+  doganReturnPhase: DoganReturnPhase;
 
   difficulty: Difficulty | null;
   currentCompound: Compound | null;
@@ -73,6 +84,10 @@ interface GameState {
   loginAsGuest: () => void;
   logout: () => void;
   loadCompounds: (difficulty?: Difficulty) => Promise<Compound[]>;
+  goToModeMenu: () => void;
+  goToLevelMenu: () => void;
+  selectPlayMode: (mode: PlayMode) => void;
+  startSandbox: () => Promise<void>;
 
   // game
   startGame: (difficulty: Difficulty) => Promise<void>;
@@ -80,14 +95,37 @@ interface GameState {
   removeFromTray: (index: number) => void;
   resetTray: () => void;
   checkAnswer: () => void;
+  dismissResult: () => void;
   nextStage: () => void;
   goToMenu: () => void;
   openDogan: () => void;
+  closeDogan: () => void;
   tickMimic: () => void;
 }
 
 function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function getSandboxElements(compounds: Compound[]) {
+  const seen = new Set<string>();
+  const elements: string[] = [];
+
+  compounds.forEach(compound => {
+    compound.available_elements.forEach(symbol => {
+      if (seen.has(symbol)) return;
+      seen.add(symbol);
+      elements.push(symbol);
+    });
+  });
+
+  return elements;
+}
+
+function matchesCompound(compound: Compound, answer: Record<string, number>) {
+  const target = compound.elements;
+  const keys = new Set([...Object.keys(answer), ...Object.keys(target)]);
+  return [...keys].every(key => (answer[key] ?? 0) === (target[key] ?? 0));
 }
 
 const savedSession = loadSession();
@@ -128,7 +166,7 @@ async function requestAuth(path: 'login' | 'signup', username: string, password:
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  phase: savedSession ? 'menu' : 'auth-landing',
+  phase: savedSession ? 'mode-menu' : 'auth-landing',
   user: savedSession,
   authError: '',
   authPending: false,
@@ -136,6 +174,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   compoundsTotal: 0,
   compoundsPending: false,
   compoundsError: '',
+  playMode: 'normal',
+  doganReturnPhase: 'menu',
 
   difficulty: null,
   currentCompound: null,
@@ -158,7 +198,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const data = await requestAuth('login', username, password);
       const user: User = { name: data.username, token: data.token, isGuest: false };
       saveSession(user);
-      set({ user, phase: 'menu', authError: '', authPending: false });
+      set({ user, phase: 'mode-menu', authError: '', authPending: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : '로그인에 실패했어요.';
       set({ authError: message, authPending: false });
@@ -172,7 +212,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const data = await requestAuth('signup', username, password);
       const user: User = { name: data.username, token: data.token, isGuest: false };
       saveSession(user);
-      set({ user, phase: 'menu', authError: '', authPending: false });
+      set({ user, phase: 'mode-menu', authError: '', authPending: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : '회원가입에 실패했어요.';
       set({ authError: message, authPending: false });
@@ -181,12 +221,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   loginAsGuest: () => {
     const user: User = { name: '게스트', isGuest: true };
-    set({ user, phase: 'menu', authError: '', authPending: false });
+    set({ user, phase: 'mode-menu', authError: '', authPending: false });
   },
 
   logout: () => {
     saveSession(null);
-    set({ user: null, phase: 'auth-landing', authError: '', authPending: false });
+    set({ user: null, phase: 'auth-landing', authError: '', authPending: false, doganReturnPhase: 'menu' });
   },
 
   loadCompounds: async (difficulty) => {
@@ -208,6 +248,44 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  goToModeMenu: () => set({ phase: 'mode-menu', doganReturnPhase: 'mode-menu' }),
+  goToLevelMenu: () => set({ phase: 'menu', doganReturnPhase: 'menu' }),
+  selectPlayMode: (playMode) => set({ playMode, phase: 'menu', doganReturnPhase: 'menu' }),
+
+  startSandbox: async () => {
+    set({ compoundsPending: true, compoundsError: '' });
+
+    const existingCompounds = get().compounds;
+    const items = existingCompounds.length > 0 ? existingCompounds : await fetchCompounds().then(data => data.items).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : '샌드박스 데이터를 불러오지 못했어요.';
+      set({ compoundsPending: false, compoundsError: message });
+      return [];
+    });
+
+    if (items.length === 0) {
+      return;
+    }
+
+    set({
+      compounds: existingCompounds.length > 0 ? existingCompounds : items,
+      compoundsTotal: existingCompounds.length > 0 ? get().compoundsTotal : items.length,
+      compoundsPending: false,
+      compoundsError: '',
+      phase: 'playing',
+      playMode: 'sandbox',
+      difficulty: null,
+      currentCompound: null,
+      remainingCompounds: [],
+      availableElements: getSandboxElements(items),
+      trayElements: [],
+      lives: 0,
+      score: 0,
+      stage: 0,
+      mimicCountdown: 0,
+      doganReturnPhase: 'playing',
+    });
+  },
+
   startGame: async (difficulty) => {
     set({ compoundsPending: true, compoundsError: '' });
 
@@ -226,6 +304,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const compounds = shuffle(data.items);
     const first = compounds[0];
+    const playMode = get().playMode;
     set({
       compoundsPending: false,
       compoundsError: '',
@@ -235,10 +314,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       remainingCompounds: compounds.slice(1),
       availableElements: first.available_elements,
       trayElements: [],
-      lives: 3,
+      lives: playMode === 'hardcore' ? HARDCORE_LIVES : DEFAULT_LIVES,
       score: 0,
       stage: 1,
       mimicCountdown: 3,
+      doganReturnPhase: difficulty === 'mimic' ? 'mimic-preview' : 'playing',
     });
   },
 
@@ -253,25 +333,51 @@ export const useGameStore = create<GameState>((set, get) => ({
   resetTray: () => set({ trayElements: [] }),
 
   checkAnswer: () => {
-    const { currentCompound, trayElements, score, lives, unlockedIds } = get();
-    if (!currentCompound) return;
+    const { currentCompound, trayElements, score, lives, unlockedIds, playMode, compounds } = get();
 
     const answer: Record<string, number> = {};
     trayElements.forEach(e => { answer[e] = (answer[e] ?? 0) + 1; });
 
-    const target = currentCompound.elements;
-    const keys = new Set([...Object.keys(answer), ...Object.keys(target)]);
-    const correct = [...keys].every(k => (answer[k] ?? 0) === (target[k] ?? 0));
+    if (playMode === 'sandbox') {
+      const matchedCompound = compounds.find(compound => matchesCompound(compound, answer));
+      if (!matchedCompound) return;
+
+      const next = new Set(unlockedIds);
+      next.add(matchedCompound.id);
+      saveUnlocked(next);
+      set({
+        currentCompound: matchedCompound,
+        phase: 'success',
+        unlockedIds: next,
+      });
+      return;
+    }
+
+    if (!currentCompound) return;
+    const correct = matchesCompound(currentCompound, answer);
 
     if (correct) {
       const next = new Set(unlockedIds);
       next.add(currentCompound.id);
       saveUnlocked(next);
-      set({ phase: 'success', score: score + 100, unlockedIds: next });
+      set({
+        phase: 'success',
+        score: score + (playMode === 'hardcore' ? HARDCORE_STAGE_SCORE : DEFAULT_STAGE_SCORE),
+        unlockedIds: next,
+      });
     } else {
       const newLives = lives - 1;
       set(newLives <= 0 ? { lives: 0, phase: 'gameover' } : { lives: newLives, phase: 'fail' });
     }
+  },
+
+  dismissResult: () => {
+    if (get().playMode !== 'sandbox') return;
+    set({
+      phase: 'playing',
+      currentCompound: null,
+      trayElements: [],
+    });
   },
 
   nextStage: () => {
@@ -288,16 +394,21 @@ export const useGameStore = create<GameState>((set, get) => ({
       trayElements: [],
       stage: stage + 1,
       mimicCountdown: 3,
+      doganReturnPhase: difficulty === 'mimic' ? 'mimic-preview' : 'playing',
     });
   },
 
-  goToMenu: () => set({ phase: 'menu' }),
-  openDogan: () => set({ phase: 'dogan' }),
+  goToMenu: () => set({ phase: 'menu', doganReturnPhase: 'menu' }),
+  openDogan: () => set(state => ({
+    phase: 'dogan',
+    doganReturnPhase: state.phase === 'dogan' ? state.doganReturnPhase : state.phase as DoganReturnPhase,
+  })),
+  closeDogan: () => set(state => ({ phase: state.doganReturnPhase })),
 
   tickMimic: () => {
     const { mimicCountdown } = get();
     set(mimicCountdown <= 1
-      ? { phase: 'playing', mimicCountdown: 0 }
+      ? { phase: 'playing', mimicCountdown: 0, doganReturnPhase: 'playing' }
       : { mimicCountdown: mimicCountdown - 1 });
   },
 }));

@@ -14,7 +14,7 @@ const DIFF_COLORS: Record<Difficulty, string> = {
 
 export default function DoganScreen() {
   const unlockedIds = useGameStore(s => s.unlockedIds);
-  const goToMenu = useGameStore(s => s.goToMenu);
+  const closeDogan = useGameStore(s => s.closeDogan);
   const compounds = useGameStore(s => s.compounds);
   const compoundsTotal = useGameStore(s => s.compoundsTotal);
   const compoundsPending = useGameStore(s => s.compoundsPending);
@@ -26,7 +26,7 @@ export default function DoganScreen() {
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={goToMenu}>← 메뉴</button>
+        <button className={styles.backBtn} onClick={closeDogan}>← 돌아가기</button>
         <div className={styles.titleWrap}>
           <span className={styles.title}>📚 화합물 도감</span>
           <span className={styles.progress}>{unlocked} / {total} 수집</span>

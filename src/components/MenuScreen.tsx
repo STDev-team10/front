@@ -7,8 +7,10 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard', 'mimic'];
 export default function MenuScreen() {
   const startGame = useGameStore(s => s.startGame);
   const openDogan = useGameStore(s => s.openDogan);
+  const goToModeMenu = useGameStore(s => s.goToModeMenu);
   const logout = useGameStore(s => s.logout);
   const user = useGameStore(s => s.user);
+  const playMode = useGameStore(s => s.playMode);
   const unlockedIds = useGameStore(s => s.unlockedIds);
   const compounds = useGameStore(s => s.compounds);
   const compoundsTotal = useGameStore(s => s.compoundsTotal);
@@ -20,15 +22,21 @@ export default function MenuScreen() {
     <div className={styles.container}>
       {/* 유저 정보 */}
       <div className={styles.userBar}>
-        <span className={styles.userName}>
-          {user?.isGuest ? '👀 게스트' : `👤 ${user?.name}`}
-        </span>
+        <div className={styles.userMeta}>
+          <span className={styles.userName}>
+            {user?.isGuest ? '👀 게스트' : `👤 ${user?.name}`}
+          </span>
+          <button className={styles.backBtn} onClick={goToModeMenu}>← 모드 선택</button>
+        </div>
         <button className={styles.logoutBtn} onClick={logout}>로그아웃</button>
       </div>
 
       <div className={styles.titleBox}>
         <div className={styles.titleEmoji}>🥗</div>
         <h1 className={styles.title}>화학 비빔밥</h1>
+        <p className={styles.modeChip}>
+          {playMode === 'hardcore' ? 'HARDCORE MODE' : playMode === 'sandbox' ? 'SANDBOX MODE' : 'NORMAL MODE'}
+        </p>
         <p className={styles.subtitle}>올바른 원소를 조합해 화합물을 만들어보세요!</p>
       </div>
 

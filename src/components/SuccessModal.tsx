@@ -4,7 +4,9 @@ import styles from './SuccessModal.module.css';
 export default function SuccessModal() {
   const compound = useGameStore(s => s.currentCompound);
   const phase = useGameStore(s => s.phase);
+  const playMode = useGameStore(s => s.playMode);
   const nextStage = useGameStore(s => s.nextStage);
+  const dismissResult = useGameStore(s => s.dismissResult);
   const goToMenu = useGameStore(s => s.goToMenu);
   const remainingCompounds = useGameStore(s => s.remainingCompounds);
 
@@ -14,6 +16,8 @@ export default function SuccessModal() {
   const isGameOver = phase === 'gameover';
   const isFail = phase === 'fail';
   const hasMore = remainingCompounds.length > 0;
+  const showFormula = playMode !== 'hardcore';
+  const isSandbox = playMode === 'sandbox';
 
   return (
     <div className={styles.overlay}>
@@ -24,12 +28,14 @@ export default function SuccessModal() {
               <span className={styles.emoji}>{compound.emoji}</span>
             </div>
             <h2 className={styles.compoundName}>{compound.name}</h2>
-            <p className={styles.formula}>{compound.formula}</p>
+            {showFormula && <p className={styles.formula}>{compound.formula}</p>}
             <div className={styles.descBox}>
-              <p className={styles.desc}>"{compound.description}"</p>
+              <p className={styles.desc}>
+                {isSandbox ? `"${compound.name}" 도감이 해제되었어요!` : `"${compound.description}"`}
+              </p>
             </div>
-            <button className={styles.nextBtn} onClick={hasMore ? nextStage : goToMenu}>
-              {hasMore ? '다음 단계 ›' : '메뉴로 돌아가기 ›'}
+            <button className={styles.nextBtn} onClick={isSandbox ? dismissResult : hasMore ? nextStage : goToMenu}>
+              {isSandbox ? '계속 실험하기 ›' : hasMore ? '다음 단계 ›' : '메뉴로 돌아가기 ›'}
             </button>
           </>
         )}
@@ -40,7 +46,7 @@ export default function SuccessModal() {
               <span className={styles.emoji}>💔</span>
             </div>
             <h2 className={styles.compoundName}>앗, 틀렸어요!</h2>
-            <p className={styles.formula}>{compound.formula}</p>
+            {showFormula && <p className={styles.formula}>{compound.formula}</p>}
             <div className={styles.descBox}>
               <p className={styles.desc}>
                 정답은 {Object.entries(compound.elements).map(([e, c]) => `${e}×${c}`).join(', ')} 입니다.

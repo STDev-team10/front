@@ -15,6 +15,12 @@
   justify-content: space-between;
 }
 
+.userMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .userName {
   font-size: 0.9rem;
   font-weight: 700;
@@ -31,6 +37,22 @@
   padding: 5px 12px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
+}
+
+.backBtn {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #5C3D2E;
+  background: #fff;
+  border: 1.5px solid #C8B0A0;
+  border-radius: 10px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.backBtn:hover {
+  border-color: #5C3D2E;
 }
 
 .logoutBtn:hover {
@@ -54,6 +76,19 @@
   color: #5C3D2E;
   margin: 0 0 6px;
   letter-spacing: -0.5px;
+}
+
+.modeChip {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid #5C3D2E;
+  background: #FFF1CC;
+  color: #5C3D2E;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
 }
 
 .subtitle {

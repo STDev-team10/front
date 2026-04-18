@@ -9,6 +9,7 @@ import styles from './GameScreen.module.css';
 export default function GameScreen() {
   const compound = useGameStore(s => s.currentCompound);
   const difficulty = useGameStore(s => s.difficulty);
+  const playMode = useGameStore(s => s.playMode);
   const availableElements = useGameStore(s => s.availableElements);
   const lives = useGameStore(s => s.lives);
   const score = useGameStore(s => s.score);
@@ -18,34 +19,56 @@ export default function GameScreen() {
   const resetTray = useGameStore(s => s.resetTray);
   const checkAnswer = useGameStore(s => s.checkAnswer);
   const goToMenu = useGameStore(s => s.goToMenu);
+  const goToModeMenu = useGameStore(s => s.goToModeMenu);
+  const openDogan = useGameStore(s => s.openDogan);
 
-  if (!compound || !difficulty) return null;
+  if (playMode !== 'sandbox' && (!compound || !difficulty)) return null;
 
   const showModal = phase === 'success' || phase === 'fail' || phase === 'gameover';
+  const maxLives = playMode === 'hardcore' ? 1 : 3;
+  const isSandbox = playMode === 'sandbox';
+  const showFormula = playMode !== 'hardcore' && !isSandbox;
 
   return (
     <div className={styles.screen}>
       {/* Header */}
       <div className={styles.header}>
-        <div className={styles.lives}>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <span key={i} className={i < lives ? styles.heartFull : styles.heartEmpty}>
-              {i < lives ? '❤️' : '🤍'}
-            </span>
-          ))}
-        </div>
-        <button className={styles.diffBadge} onClick={goToMenu}>
-          🔒 {DIFFICULTY_LABELS[difficulty]}
-        </button>
-        <div className={styles.score}>{score} P</div>
+        {isSandbox ? (
+          <>
+            <button className={styles.headerBtn} onClick={goToModeMenu}>되돌아가기</button>
+            <button className={styles.bookBtn} onClick={openDogan} aria-label="도감 보기">
+              <span className={styles.bookSpine} />
+              <span className={styles.bookPages} />
+              <span className={styles.bookText}>도감</span>
+            </button>
+            <div className={styles.score}>SANDBOX</div>
+          </>
+        ) : (
+          <>
+            <div className={styles.lives}>
+              {Array.from({ length: maxLives }).map((_, i) => (
+                <span key={i} className={i < lives ? styles.heartFull : styles.heartEmpty}>
+                  {i < lives ? '❤️' : '🤍'}
+                </span>
+              ))}
+            </div>
+            <button className={styles.diffBadge} onClick={goToMenu}>
+              🔒 {DIFFICULTY_LABELS[difficulty!]}
+            </button>
+            <div className={styles.score}>{score} P</div>
+          </>
+        )}
       </div>
 
-      {/* Target compound */}
-      <div className={styles.target}>
-        <div className={styles.targetLabel}>TARGET COMPOUND · STAGE {stage}</div>
-        <div className={styles.targetName}>[{compound.name}]</div>
-        <div className={styles.targetFormula}>{compound.formula}</div>
-      </div>
+      {isSandbox ? (
+        <p className={styles.sandboxHint}>문제 없이 자유롭게 조합해보고, 막히면 도감을 바로 열어보세요.</p>
+      ) : (
+        <div className={styles.target}>
+          <div className={styles.targetLabel}>TARGET COMPOUND · STAGE {stage}</div>
+          <div className={styles.targetName}>[{compound!.name}]</div>
+          {showFormula && <div className={styles.targetFormula}>{compound!.formula}</div>}
+        </div>
+      )}
 
       {/* Elements row */}
       <div className={styles.elements}>
@@ -73,7 +96,7 @@ export default function GameScreen() {
       </div>
 
       {phase === 'mimic-preview' && <MimicPreview />}
-      {showModal && <SuccessModal />}
+      {((!isSandbox && showModal) || (isSandbox && phase === 'success')) && <SuccessModal />}
     </div>
   );
 }
