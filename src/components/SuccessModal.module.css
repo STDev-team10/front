@@ -182,4 +182,12 @@
   border-radius: 0 10px 10px 0;
   padding: 10px 14px;
   margin: 0;
+  text-align: left;
+}
+
+.aiLabel {
+  display: inline-block;
+  margin-right: 6px;
+  font-weight: 900;
+  color: #9a5d2f;
 }

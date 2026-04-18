@@ -74,7 +74,12 @@ export default function SuccessModal() {
             </div>
             <div className={styles.aiBox}>
               {aiLoading && <p className={styles.aiLoading}>✨ AI 설명 불러오는 중...</p>}
-              {!aiLoading && aiExplanation && <p className={styles.aiText}>{aiExplanation}</p>}
+              {!aiLoading && aiExplanation && (
+                <div className={styles.aiText}>
+                  <span className={styles.aiLabel}>AI선생님:</span>
+                  <span>{aiExplanation}</span>
+                </div>
+              )}
             </div>
             {showTimeAttack && (
               <div className={styles.timeAttackBox}>
