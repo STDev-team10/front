@@ -1,5 +1,7 @@
 import { type Compound, type Difficulty } from '../data/compounds';
 
+export type TimeAttackPlayMode = 'normal' | 'hardcore';
+
 interface CompoundListResponse {
   items: Compound[];
   total: number;
@@ -8,6 +10,37 @@ interface CompoundListResponse {
 interface CompoundUnlockListResponse {
   items: string[];
   total: number;
+}
+
+export interface TimeAttackRecordResponse {
+  record_id: number;
+  play_mode: TimeAttackPlayMode;
+  difficulty: Difficulty;
+  clear_time_ms: number;
+  rank: number;
+  is_personal_best: boolean;
+}
+
+export interface TimeAttackRankingEntry {
+  rank: number;
+  user_id: number;
+  username: string;
+  play_mode: TimeAttackPlayMode;
+  difficulty: Difficulty;
+  clear_time_ms: number;
+  cleared_at: string;
+}
+
+interface TimeAttackRankingListResponse {
+  items: TimeAttackRankingEntry[];
+  total: number;
+  my_item: TimeAttackRankingEntry | null;
+}
+
+export interface TimeAttackRankingResponse {
+  items: TimeAttackRankingEntry[];
+  total: number;
+  my_item: TimeAttackRankingEntry | null;
 }
 
 function normalizeCompound(compound: Compound): Compound {
@@ -77,4 +110,64 @@ export async function unlockCompound(compoundId: string, token: string): Promise
   if (!response.ok) {
     throw new Error('화합물 해제 상태를 저장하지 못했어요.');
   }
+}
+
+export async function saveTimeAttackRecord(
+  token: string,
+  playMode: TimeAttackPlayMode,
+  difficulty: Difficulty,
+  clearTimeMs: number,
+): Promise<TimeAttackRecordResponse> {
+  const response = await fetch('/api/compounds/time-attack-records', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(token),
+    },
+    body: JSON.stringify({
+      play_mode: playMode,
+      difficulty,
+      clear_time_ms: clearTimeMs,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('타임어택 기록 저장에 실패했어요.');
+  }
+
+  return response.json() as Promise<TimeAttackRecordResponse>;
+}
+
+export async function fetchTimeAttackRanking(
+  token: string | undefined,
+  playMode: TimeAttackPlayMode,
+  difficulty: Difficulty,
+  limit = 5,
+): Promise<TimeAttackRankingResponse> {
+  const response = await fetch(
+    `/api/compounds/time-attack-rankings?play_mode=${playMode}&difficulty=${difficulty}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(token),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('랭킹을 불러오지 못했어요.');
+  }
+
+  const data = await response.json() as TimeAttackRankingListResponse;
+  return {
+    items: data.items,
+    total: data.total,
+    my_item: data.my_item,
+  };
+}
+
+export async function fetchMyTimeAttackBest(
+  token: string,
+  playMode: TimeAttackPlayMode,
+  difficulty: Difficulty,
+): Promise<TimeAttackRankingEntry | null> {
+  const data = await fetchTimeAttackRanking(token, playMode, difficulty, 5);
+  return data.my_item;
 }

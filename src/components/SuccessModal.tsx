@@ -1,14 +1,30 @@
 import { useGameStore } from '../store/gameStore';
 import styles from './SuccessModal.module.css';
 
+function formatTime(ms: number) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const millis = ms % 1000;
+  return `${minutes}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
+}
+
 export default function SuccessModal() {
   const compound = useGameStore(s => s.currentCompound);
   const phase = useGameStore(s => s.phase);
   const playMode = useGameStore(s => s.playMode);
+  const lives = useGameStore(s => s.lives);
   const nextStage = useGameStore(s => s.nextStage);
   const dismissResult = useGameStore(s => s.dismissResult);
   const goToMenu = useGameStore(s => s.goToMenu);
   const remainingCompounds = useGameStore(s => s.remainingCompounds);
+  const latestClearTimeMs = useGameStore(s => s.latestClearTimeMs);
+  const latestTimeAttackRecord = useGameStore(s => s.latestTimeAttackRecord);
+  const timeAttackRanking = useGameStore(s => s.timeAttackRanking);
+  const myTimeAttackBest = useGameStore(s => s.myTimeAttackBest);
+  const timeAttackPending = useGameStore(s => s.timeAttackPending);
+  const timeAttackError = useGameStore(s => s.timeAttackError);
+  const user = useGameStore(s => s.user);
 
   if (!compound || (phase !== 'success' && phase !== 'gameover' && phase !== 'fail')) return null;
 
@@ -18,6 +34,9 @@ export default function SuccessModal() {
   const hasMore = remainingCompounds.length > 0;
   const showFormula = playMode !== 'hardcore';
   const isSandbox = playMode === 'sandbox';
+  const isLifeGameOver = isGameOver && lives <= 0;
+  const isStageClear = isGameOver && lives > 0;
+  const showTimeAttack = isSuccess && !isSandbox && !user?.isGuest && latestClearTimeMs !== null;
 
   return (
     <div className={styles.overlay}>
@@ -34,6 +53,30 @@ export default function SuccessModal() {
                 {isSandbox ? `"${compound.name}" 도감이 해제되었어요!` : `"${compound.description}"`}
               </p>
             </div>
+            {showTimeAttack && (
+              <div className={styles.timeAttackBox}>
+                <p className={styles.timeRow}>이번 기록: {formatTime(latestClearTimeMs)}</p>
+                {latestTimeAttackRecord && <p className={styles.timeRow}>현재 순위: {latestTimeAttackRecord.rank}위</p>}
+                {latestTimeAttackRecord && (
+                  <p className={styles.timeRow}>
+                    개인 최고 기록 갱신: {latestTimeAttackRecord.is_personal_best ? '예' : '아니오'}
+                  </p>
+                )}
+                {myTimeAttackBest && <p className={styles.timeRow}>내 최고 기록: {formatTime(myTimeAttackBest.clear_time_ms)}</p>}
+                {timeAttackPending && <p className={styles.timeHint}>랭킹을 불러오는 중이에요...</p>}
+                {timeAttackError && <p className={styles.timeHint}>{timeAttackError}</p>}
+                {!timeAttackPending && timeAttackRanking.length > 0 && (
+                  <div className={styles.rankingBox}>
+                    <p className={styles.rankingTitle}>상위 10명 랭킹</p>
+                    {timeAttackRanking.map(entry => (
+                      <p key={`${entry.user_id}-${entry.rank}-${entry.cleared_at}`} className={styles.rankingRow}>
+                        {entry.rank}. {entry.username} · {formatTime(entry.clear_time_ms)}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <button className={styles.nextBtn} onClick={isSandbox ? dismissResult : hasMore ? nextStage : goToMenu}>
               {isSandbox ? '계속 실험하기 ›' : hasMore ? '다음 단계 ›' : '메뉴로 돌아가기 ›'}
             </button>
@@ -58,7 +101,25 @@ export default function SuccessModal() {
           </>
         )}
 
-        {isGameOver && (
+        {isLifeGameOver && (
+          <>
+            <div className={styles.imgBox}>
+              <span className={styles.emoji}>☠️</span>
+            </div>
+            <h2 className={styles.compoundName}>게임 오버!</h2>
+            {showFormula && <p className={styles.formula}>{compound.formula}</p>}
+            <div className={styles.descBox}>
+              <p className={styles.desc}>
+                정답은 {Object.entries(compound.elements).map(([e, c]) => `${e}×${c}`).join(', ')} 입니다.
+              </p>
+            </div>
+            <button className={styles.nextBtn} onClick={goToMenu}>
+              메뉴로 돌아가기
+            </button>
+          </>
+        )}
+
+        {isStageClear && (
           <>
             <div className={styles.imgBox}>
               <span className={styles.emoji}>🎉</span>

@@ -1,5 +1,14 @@
 import { create } from 'zustand';
-import { fetchCompounds, fetchUnlockedCompoundIds, unlockCompound } from '../api/compounds';
+import {
+  fetchCompounds,
+  fetchMyTimeAttackBest,
+  fetchTimeAttackRanking,
+  fetchUnlockedCompoundIds,
+  saveTimeAttackRecord,
+  type TimeAttackRankingEntry,
+  type TimeAttackRecordResponse,
+  unlockCompound,
+} from '../api/compounds';
 import { type Compound, type Difficulty } from '../data/compounds';
 
 export type GamePhase =
@@ -19,6 +28,12 @@ const DEFAULT_LIVES = 3;
 const HARDCORE_LIVES = 1;
 const DEFAULT_STAGE_SCORE = 100;
 const HARDCORE_STAGE_SCORE = 150;
+const STAGE_LIMITS: Record<Difficulty, number> = {
+  easy: 5,
+  medium: 10,
+  hard: 15,
+  mimic: 20,
+};
 
 type DoganReturnPhase = Exclude<GamePhase, 'dogan'>;
 
@@ -75,6 +90,13 @@ interface GameState {
   stage: number;
   mimicCountdown: number;
   unlockedIds: Set<string>;
+  timeAttackStartedAt: number | null;
+  latestClearTimeMs: number | null;
+  latestTimeAttackRecord: TimeAttackRecordResponse | null;
+  timeAttackRanking: TimeAttackRankingEntry[];
+  myTimeAttackBest: TimeAttackRankingEntry | null;
+  timeAttackPending: boolean;
+  timeAttackError: string;
 
   // auth
   goToLogin: () => void;
@@ -195,6 +217,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   stage: 1,
   mimicCountdown: 3,
   unlockedIds: loadUnlocked(),
+  timeAttackStartedAt: null,
+  latestClearTimeMs: null,
+  latestTimeAttackRecord: null,
+  timeAttackRanking: [],
+  myTimeAttackBest: null,
+  timeAttackPending: false,
+  timeAttackError: '',
 
   goToLogin: () => set({ phase: 'auth-login', authError: '' }),
   goToSignup: () => set({ phase: 'auth-signup', authError: '' }),
@@ -231,7 +260,18 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   loginAsGuest: () => {
     const user: User = { name: '게스트', isGuest: true };
-    set({ user, phase: 'mode-menu', authError: '', authPending: false });
+    set({
+      user,
+      phase: 'mode-menu',
+      authError: '',
+      authPending: false,
+      latestClearTimeMs: null,
+      latestTimeAttackRecord: null,
+      timeAttackRanking: [],
+      myTimeAttackBest: null,
+      timeAttackPending: false,
+      timeAttackError: '',
+    });
   },
 
   logout: () => {
@@ -243,6 +283,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       authError: '',
       authPending: false,
       doganReturnPhase: 'menu',
+      timeAttackStartedAt: null,
+      latestClearTimeMs: null,
+      latestTimeAttackRecord: null,
+      timeAttackRanking: [],
+      myTimeAttackBest: null,
+      timeAttackPending: false,
+      timeAttackError: '',
     });
   },
 
@@ -303,6 +350,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       stage: 0,
       mimicCountdown: 0,
       unlockedIds,
+      timeAttackStartedAt: null,
+      latestClearTimeMs: null,
+      latestTimeAttackRecord: null,
+      timeAttackRanking: [],
+      myTimeAttackBest: null,
+      timeAttackPending: false,
+      timeAttackError: '',
       doganReturnPhase: 'playing',
     });
   },
@@ -324,7 +378,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    const compounds = shuffle(data.items);
+    const compounds = shuffle(data.items).slice(0, STAGE_LIMITS[difficulty]);
     const first = compounds[0];
     const playMode = get().playMode;
     set({
@@ -341,6 +395,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       stage: 1,
       mimicCountdown: 3,
       unlockedIds,
+      timeAttackStartedAt: Date.now(),
+      latestClearTimeMs: null,
+      latestTimeAttackRecord: null,
+      timeAttackRanking: [],
+      myTimeAttackBest: null,
+      timeAttackPending: false,
+      timeAttackError: '',
       doganReturnPhase: difficulty === 'mimic' ? 'mimic-preview' : 'playing',
     });
   },
@@ -356,7 +417,17 @@ export const useGameStore = create<GameState>((set, get) => ({
   resetTray: () => set({ trayElements: [] }),
 
   checkAnswer: () => {
-    const { currentCompound, trayElements, score, lives, unlockedIds, playMode, compounds, user } = get();
+    const {
+      currentCompound,
+      trayElements,
+      score,
+      lives,
+      unlockedIds,
+      playMode,
+      compounds,
+      user,
+      difficulty,
+    } = get();
 
     const answer: Record<string, number> = {};
     trayElements.forEach(e => { answer[e] = (answer[e] ?? 0) + 1; });
@@ -386,6 +457,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (correct) {
       const next = new Set(unlockedIds);
       next.add(currentCompound.id);
+      const isLastStage = get().remainingCompounds.length === 0;
       if (user?.token) {
         void unlockCompound(currentCompound.id, user.token).catch(() => undefined);
       } else {
@@ -396,6 +468,46 @@ export const useGameStore = create<GameState>((set, get) => ({
         score: score + (playMode === 'hardcore' ? HARDCORE_STAGE_SCORE : DEFAULT_STAGE_SCORE),
         unlockedIds: next,
       });
+
+      if (isLastStage) {
+        const { timeAttackStartedAt } = get();
+        if (user?.token && difficulty && playMode !== 'sandbox' && timeAttackStartedAt) {
+          const clearTimeMs = Date.now() - timeAttackStartedAt;
+
+          set({
+            latestClearTimeMs: clearTimeMs,
+            latestTimeAttackRecord: null,
+            timeAttackRanking: [],
+            myTimeAttackBest: null,
+            timeAttackPending: true,
+            timeAttackError: '',
+          });
+
+          void saveTimeAttackRecord(user.token, playMode, difficulty, clearTimeMs)
+            .then(async record => {
+              const [ranking, best] = await Promise.all([
+              fetchTimeAttackRanking(user.token, playMode, difficulty, 10),
+              fetchMyTimeAttackBest(user.token!, playMode, difficulty),
+            ]);
+
+            set({
+              latestTimeAttackRecord: record,
+              latestClearTimeMs: clearTimeMs,
+              timeAttackRanking: ranking.items,
+              myTimeAttackBest: best,
+              timeAttackPending: false,
+              timeAttackError: '',
+              });
+            })
+            .catch(() => {
+              set({
+                latestClearTimeMs: clearTimeMs,
+                timeAttackPending: false,
+                timeAttackError: '타임어택 기록을 불러오지 못했어요.',
+              });
+            });
+        }
+      }
     } else {
       const newLives = lives - 1;
       set(newLives <= 0 ? { lives: 0, phase: 'gameover' } : { lives: newLives, phase: 'fail' });
