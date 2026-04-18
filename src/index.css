@@ -1,0 +1,29 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #FAF3E0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+.app {
+  min-height: 100dvh;
+  background: #FAF3E0;
+}
+
+h1, h2, h3, p, button {
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  font-family: inherit;
+}

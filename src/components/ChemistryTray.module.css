@@ -1,0 +1,35 @@
+.tray {
+  background: #FAD4DC;
+  border: 2.5px solid #5C3D2E;
+  border-radius: 24px;
+  padding: 16px 20px 20px;
+  min-height: 150px;
+  transition: background 0.15s;
+}
+
+.tray.dragOver {
+  background: #F5B0BE;
+}
+
+.header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #A06070;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+
+.placeholder {
+  font-size: 0.95rem;
+  color: #C89090;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.elements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 70px;
+  align-content: flex-start;
+}

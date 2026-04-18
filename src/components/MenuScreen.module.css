@@ -1,0 +1,87 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 40px 20px;
+}
+
+.titleBox {
+  text-align: center;
+}
+
+.titleEmoji {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: #5C3D2E;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #8B6555;
+  margin: 0;
+}
+
+.levels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.levelBtn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  background: #fff;
+  border: 2.5px solid #5C3D2E;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  box-shadow: 0 4px 0 #5C3D2E;
+}
+
+.levelBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #5C3D2E;
+}
+
+.levelBtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #5C3D2E;
+}
+
+.levelEmoji {
+  font-size: 2rem;
+}
+
+.levelStep {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #A08070;
+  display: block;
+}
+
+.levelLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5C3D2E;
+  flex: 1;
+  text-align: left;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #A08070;
+  text-align: center;
+}

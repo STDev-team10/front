@@ -1,0 +1,153 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lives {
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  border: 2px solid #5C3D2E;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.heartFull, .heartEmpty {
+  font-size: 1.2rem;
+}
+
+.diffBadge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #5C3D2E;
+  background: #E8F0D8;
+  border: 2px solid #5C3D2E;
+  border-radius: 20px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex: 1;
+  max-width: 220px;
+  text-align: center;
+}
+
+.diffBadge:hover {
+  opacity: 0.75;
+}
+
+.score {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #5C3D2E;
+  background: #E8E0D8;
+  border: 2px solid #5C3D2E;
+  border-radius: 20px;
+  padding: 8px 16px;
+}
+
+/* Target */
+.target {
+  background: #5C3D2E;
+  border-radius: 22px;
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.targetLabel {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: #B89080;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.targetName {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #FAF0E0;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.targetFormula {
+  font-size: 1.1rem;
+  color: #C8A882;
+  font-weight: 600;
+}
+
+/* Elements */
+.elements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-bottom: 12px;
+}
+
+.resetBtn {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #fff;
+  border: 2.5px solid #5C3D2E;
+  box-shadow: 0 3px 0 #5C3D2E;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  flex-shrink: 0;
+}
+
+.resetBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 #5C3D2E;
+}
+
+.resetBtn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #5C3D2E;
+}
+
+.mixBtn {
+  flex: 1;
+  padding: 18px;
+  background: #E8736A;
+  color: #fff;
+  border: 2.5px solid #5C3D2E;
+  border-radius: 22px;
+  font-size: 1.15rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #5C3D2E;
+  transition: transform 0.1s, box-shadow 0.1s;
+  letter-spacing: 0.3px;
+}
+
+.mixBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #5C3D2E;
+}
+
+.mixBtn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #5C3D2E;
+}
