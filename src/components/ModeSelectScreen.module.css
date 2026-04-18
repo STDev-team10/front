@@ -15,10 +15,38 @@
   justify-content: space-between;
 }
 
+.userMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .userName {
   font-size: 0.9rem;
   font-weight: 700;
   color: #5C3D2E;
+}
+
+.pointsBtn {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #5C3D2E;
+  background: #FFF1CC;
+  border: 1.5px solid #D8B356;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+}
+
+.pointsBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #5C3D2E;
+}
+
+.pointsBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .logoutBtn {
@@ -151,6 +179,126 @@
   font-size: 0.82rem;
   font-weight: 800;
   color: #A08070;
+}
+
+.rankingOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.rankingCard {
+  width: min(100%, 360px);
+  background: #fff;
+  border: 2.5px solid #5C3D2E;
+  border-radius: 24px;
+  padding: 22px 20px 20px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+}
+
+.rankingHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rankingEyebrow {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #A08070;
+  letter-spacing: 0.08em;
+}
+
+.rankingTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #5C3D2E;
+}
+
+.rankingClose {
+  border: 1.5px solid #C8B0A0;
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #5C3D2E;
+  cursor: pointer;
+}
+
+.rankingList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rankingItem {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #FFF7E8;
+  border: 1.5px solid #E3CFAE;
+  border-radius: 14px;
+}
+
+.rankingRank {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #5C3D2E;
+}
+
+.rankingName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #5C3D2E;
+}
+
+.rankingPoints {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #8B6555;
+}
+
+.rankingHint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #8B6555;
+  text-align: center;
+}
+
+.myRankingBox {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #F3F7FF;
+  border: 1.5px solid #CBD8F0;
+}
+
+.myRankingLabel {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #6A7EA6;
+  letter-spacing: 0.06em;
+}
+
+.myRankingValue {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: #324A6D;
 }
 
 @media (max-width: 560px) {

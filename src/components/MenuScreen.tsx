@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fetchPointsRanking, type PointsRankingResponse } from '../api/auth';
 import { fetchTimeAttackRanking, type TimeAttackRankingEntry, type TimeAttackRankingResponse } from '../api/compounds';
 import { type Difficulty, DIFFICULTY_LABELS, DIFFICULTY_EMOJIS } from '../data/compounds';
 import { useGameStore } from '../store/gameStore';
@@ -21,6 +22,10 @@ export default function MenuScreen() {
   const [rankingData, setRankingData] = useState<TimeAttackRankingResponse | null>(null);
   const [rankingPending, setRankingPending] = useState(false);
   const [rankingError, setRankingError] = useState('');
+  const [pointsOpen, setPointsOpen] = useState(false);
+  const [pointsRanking, setPointsRanking] = useState<PointsRankingResponse | null>(null);
+  const [pointsPending, setPointsPending] = useState(false);
+  const [pointsError, setPointsError] = useState('');
   const phase = useGameStore(s => s.phase);
   const startGame = useGameStore(s => s.startGame);
   const openDogan = useGameStore(s => s.openDogan);
@@ -97,6 +102,25 @@ export default function MenuScreen() {
       });
   };
 
+  const openPointsRanking = () => {
+    if (!user?.token || user.isGuest) return;
+
+    setPointsOpen(true);
+    setPointsPending(true);
+    setPointsError('');
+    setPointsRanking(null);
+
+    void fetchPointsRanking(user.token)
+      .then(data => {
+        setPointsRanking(data);
+        setPointsPending(false);
+      })
+      .catch((error: unknown) => {
+        setPointsError(error instanceof Error ? error.message : '포인트 랭킹을 불러오지 못했어요.');
+        setPointsPending(false);
+      });
+  };
+
   return (
     <div className={styles.container}>
       {/* 유저 정보 */}
@@ -105,6 +129,14 @@ export default function MenuScreen() {
           <span className={styles.userName}>
             {user?.isGuest ? '👀 게스트' : `👤 ${user?.name}`}
           </span>
+          <button
+            type="button"
+            className={styles.pointsBtn}
+            onClick={openPointsRanking}
+            disabled={!user || user.isGuest}
+          >
+            ⭐ {user?.points ?? 0}P
+          </button>
           <button className={styles.backBtn} onClick={goToModeMenu}>← 모드 선택</button>
         </div>
         <button className={styles.logoutBtn} onClick={logout}>로그아웃</button>
@@ -204,6 +236,50 @@ export default function MenuScreen() {
                     </p>
                   ) : (
                     <p className={styles.myRankingValue}>아직 내 기록이 없어요.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {pointsOpen && (
+        <div className={styles.rankingOverlay} onClick={() => setPointsOpen(false)}>
+          <div className={styles.rankingCard} onClick={event => event.stopPropagation()}>
+            <div className={styles.rankingHeader}>
+              <div>
+                <p className={styles.rankingEyebrow}>POINT RANKING</p>
+                <h2 className={styles.rankingTitle}>포인트 순위</h2>
+              </div>
+              <button className={styles.rankingClose} onClick={() => setPointsOpen(false)}>닫기</button>
+            </div>
+
+            {pointsPending && <p className={styles.rankingHint}>포인트 랭킹을 불러오는 중이에요...</p>}
+            {pointsError && <p className={styles.rankingHint}>{pointsError}</p>}
+
+            {!pointsPending && !pointsError && pointsRanking && (
+              <>
+                <div className={styles.rankingList}>
+                  {pointsRanking.items.length > 0 ? pointsRanking.items.map(entry => (
+                    <div key={`${entry.user_id}-${entry.rank}`} className={styles.rankingItem}>
+                      <span className={styles.rankingRank}>{entry.rank}</span>
+                      <span className={styles.rankingName}>{entry.username}</span>
+                      <span className={styles.rankingTime}>{entry.points}P</span>
+                    </div>
+                  )) : (
+                    <p className={styles.rankingHint}>아직 등록된 포인트 기록이 없어요.</p>
+                  )}
+                </div>
+
+                <div className={styles.myRankingBox}>
+                  <p className={styles.myRankingLabel}>내 현재 순위</p>
+                  {pointsRanking.my_item ? (
+                    <p className={styles.myRankingValue}>
+                      {pointsRanking.my_item.rank}위 · {pointsRanking.my_item.points}P
+                    </p>
+                  ) : (
+                    <p className={styles.myRankingValue}>아직 내 포인트 기록이 없어요.</p>
                   )}
                 </div>
               </>

@@ -27,6 +27,28 @@
   color: #5C3D2E;
 }
 
+.pointsBtn {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #5C3D2E;
+  background: #FFF1CC;
+  border: 1.5px solid #D8B356;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+}
+
+.pointsBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #5C3D2E;
+}
+
+.pointsBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .logoutBtn {
   font-size: 0.8rem;
   font-weight: 700;

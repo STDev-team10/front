@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { saveEarnedPoints } from '../api/auth';
 import {
   fetchCompounds,
   fetchMyTimeAttackBest,
@@ -475,9 +476,22 @@ export const useGameStore = create<GameState>((set, get) => ({
       const nextScore = score + stageScore;
 
       if (isLastStage && user) {
-        const nextUser = { ...user, points: user.points + nextScore };
-        saveSession(nextUser);
-        set({ user: nextUser });
+        if (user.token) {
+          void saveEarnedPoints(user.token, nextScore)
+            .then(points => {
+              set(state => {
+                if (!state.user) return state;
+                const nextUser = { ...state.user, points };
+                saveSession(nextUser);
+                return { user: nextUser };
+              });
+            })
+            .catch(() => undefined);
+        } else {
+          const nextUser = { ...user, points: user.points + nextScore };
+          saveSession(nextUser);
+          set({ user: nextUser });
+        }
       }
 
       if (user?.token) {
