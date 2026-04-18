@@ -5,6 +5,7 @@ import {
   fetchMyTimeAttackBest,
   fetchTimeAttackRanking,
   fetchUnlockedCompoundIds,
+  normalizeCompound,
   saveTimeAttackRecord,
   type TimeAttackRankingEntry,
   type TimeAttackRecordResponse,
@@ -142,7 +143,7 @@ function getSandboxElements(compounds: Compound[]) {
   const elements: string[] = [];
 
   compounds.forEach(compound => {
-    compound.available_elements.forEach(symbol => {
+    normalizeCompound(compound).available_elements.forEach(symbol => {
       if (seen.has(symbol)) return;
       seen.add(symbol);
       elements.push(symbol);
@@ -392,7 +393,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    const compounds = shuffle(data.items).slice(0, STAGE_LIMITS[difficulty]);
+    const compounds = shuffle(data.items).slice(0, STAGE_LIMITS[difficulty]).map(normalizeCompound);
     const first = compounds[0];
     const playMode = get().playMode;
     set({
@@ -402,7 +403,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       difficulty,
       currentCompound: first,
       remainingCompounds: compounds.slice(1),
-      availableElements: first.available_elements,
+      availableElements: normalizeCompound(first).available_elements,
       trayElements: [],
       lives: playMode === 'hardcore' ? HARDCORE_LIVES : DEFAULT_LIVES,
       score: 0,
@@ -571,7 +572,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!difficulty) return;
     if (remainingCompounds.length === 0) { set({ phase: 'gameover' }); return; }
 
-    const next = remainingCompounds[0];
+    const next = normalizeCompound(remainingCompounds[0]);
     set({
       phase: difficulty === 'mimic' ? 'mimic-preview' : 'playing',
       currentCompound: next,

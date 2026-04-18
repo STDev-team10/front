@@ -43,7 +43,7 @@ export interface TimeAttackRankingResponse {
   my_item: TimeAttackRankingEntry | null;
 }
 
-function normalizeCompound(compound: Compound): Compound {
+export function normalizeCompound(compound: Compound): Compound {
   const available = new Set(compound.available_elements);
 
   Object.keys(compound.elements).forEach(symbol => {
