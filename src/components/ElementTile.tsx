@@ -10,8 +10,12 @@ interface Props {
 }
 
 export default function ElementTile({ symbol, onClick, onDragStart, small, removable }: Props) {
-  const el = ELEMENT_MAP[symbol];
-  if (!el) return null;
+  const el = ELEMENT_MAP[symbol] ?? {
+    symbol,
+    name: symbol,
+    color: '#E8E0D8',
+    textColor: '#5C3D2E',
+  };
 
   return (
     <div
