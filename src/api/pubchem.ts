@@ -1,24 +1,19 @@
-export async function fetchPubchemCid(formula: string, compoundId: string): Promise<number | null> {
-  const nameQuery = compoundId.replace(/-/g, ' ');
+export interface Compound3dInfo {
+  nameKo: string;
+  nameEn: string | null;
+  formula: string | null;
+  pubchemCid: number | null;
+  has3d: boolean;
+}
 
-  const attempts = [
-    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(nameQuery)}/cids/JSON`,
-    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/formula/${encodeURIComponent(formula)}/cids/JSON?MaxRecords=1`,
-  ];
-
-  for (const url of attempts) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const data = await res.json() as { IdentifierList?: { CID?: number[] } };
-      const cid = data?.IdentifierList?.CID?.[0];
-      if (cid) return cid;
-    } catch {
-      continue;
-    }
-  }
-
-  return null;
+export async function fetchCompound3d(compoundId: string): Promise<Compound3dInfo> {
+  const res = await fetch('/api/compound/3d', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: compoundId }),
+  });
+  if (!res.ok) throw new Error('3d info fetch failed');
+  return res.json() as Promise<Compound3dInfo>;
 }
 
 export async function fetch3dSdf(cid: number): Promise<string | null> {

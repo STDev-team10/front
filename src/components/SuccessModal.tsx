@@ -41,7 +41,7 @@ export default function SuccessModal() {
     if (!isSuccess || !compound) return;
     setAiExplanation('');
     setAiLoading(true);
-    fetchCompoundExplanation(compound.name)
+    fetchCompoundExplanation(compound.id)
       .then(setAiExplanation)
       .catch(() => undefined)
       .finally(() => setAiLoading(false));
@@ -62,7 +62,6 @@ export default function SuccessModal() {
         {isSuccess && (
           <>
             <MoleculeViewer
-              formula={compound.formula}
               compoundId={compound.id}
               fallbackEmoji={compound.emoji}
             />
