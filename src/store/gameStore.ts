@@ -471,7 +471,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       if (isLastStage) {
         const { timeAttackStartedAt } = get();
-        if (user?.token && difficulty && playMode !== 'sandbox' && timeAttackStartedAt) {
+        if (user?.token && difficulty && timeAttackStartedAt) {
           const clearTimeMs = Date.now() - timeAttackStartedAt;
 
           set({
@@ -486,17 +486,17 @@ export const useGameStore = create<GameState>((set, get) => ({
           void saveTimeAttackRecord(user.token, playMode, difficulty, clearTimeMs)
             .then(async record => {
               const [ranking, best] = await Promise.all([
-              fetchTimeAttackRanking(user.token, playMode, difficulty, 10),
-              fetchMyTimeAttackBest(user.token!, playMode, difficulty),
-            ]);
+                fetchTimeAttackRanking(user.token, playMode, difficulty, 10),
+                fetchMyTimeAttackBest(user.token, playMode, difficulty),
+              ]);
 
-            set({
-              latestTimeAttackRecord: record,
-              latestClearTimeMs: clearTimeMs,
-              timeAttackRanking: ranking.items,
-              myTimeAttackBest: best,
-              timeAttackPending: false,
-              timeAttackError: '',
+              set({
+                latestTimeAttackRecord: record,
+                latestClearTimeMs: clearTimeMs,
+                timeAttackRanking: ranking.items,
+                myTimeAttackBest: best,
+                timeAttackPending: false,
+                timeAttackError: '',
               });
             })
             .catch(() => {
