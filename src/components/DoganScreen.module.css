@@ -113,6 +113,13 @@
   justify-content: center;
   text-align: center;
   gap: 6px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.moreCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 rgba(92, 61, 46, 0.18);
 }
 
 .moreCount {

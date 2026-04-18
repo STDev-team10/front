@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { DIFFICULTY_LABELS, type Difficulty } from '../data/compounds';
 import styles from './DoganScreen.module.css';
@@ -13,6 +14,7 @@ const DIFF_COLORS: Record<Difficulty, string> = {
 };
 
 export default function DoganScreen() {
+  const [expandedDifficulties, setExpandedDifficulties] = useState<Set<Difficulty>>(new Set());
   const unlockedIds = useGameStore(s => s.unlockedIds);
   const closeDogan = useGameStore(s => s.closeDogan);
   const compounds = useGameStore(s => s.compounds);
@@ -22,6 +24,18 @@ export default function DoganScreen() {
 
   const total = compoundsTotal;
   const unlocked = compounds.filter(c => unlockedIds.has(c.id)).length;
+
+  const toggleDifficulty = (difficulty: Difficulty) => {
+    setExpandedDifficulties(current => {
+      const next = new Set(current);
+      if (next.has(difficulty)) {
+        next.delete(difficulty);
+      } else {
+        next.add(difficulty);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className={styles.screen}>
@@ -45,7 +59,8 @@ export default function DoganScreen() {
 
       {DIFFICULTY_ORDER.map(diff => {
         const filteredCompounds = compounds.filter(c => c.difficulty === diff);
-        const visibleCompounds = filteredCompounds.slice(0, VISIBLE_CARD_LIMIT);
+        const isExpanded = expandedDifficulties.has(diff);
+        const visibleCompounds = isExpanded ? filteredCompounds : filteredCompounds.slice(0, VISIBLE_CARD_LIMIT);
         const hiddenCount = Math.max(filteredCompounds.length - VISIBLE_CARD_LIMIT, 0);
         return (
           <section key={diff} className={styles.section}>
@@ -84,10 +99,16 @@ export default function DoganScreen() {
                 );
               })}
               {hiddenCount > 0 && (
-                <div className={styles.moreCard}>
-                  <div className={styles.moreCount}>+{hiddenCount}</div>
-                  <p className={styles.moreLabel}>개의 화합물 더 있어요</p>
-                </div>
+                <button
+                  type="button"
+                  className={styles.moreCard}
+                  onClick={() => toggleDifficulty(diff)}
+                >
+                  <div className={styles.moreCount}>{isExpanded ? '접기' : `+${hiddenCount}`}</div>
+                  <p className={styles.moreLabel}>
+                    {isExpanded ? '숨겨진 카드 접기' : '개의 화합물 더 있어요'}
+                  </p>
+                </button>
               )}
             </div>
           </section>

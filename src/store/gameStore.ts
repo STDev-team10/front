@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchCompounds } from '../api/compounds';
+import { fetchCompounds, fetchUnlockedCompoundIds, unlockCompound } from '../api/compounds';
 import { type Compound, type Difficulty } from '../data/compounds';
 
 export type GamePhase =
@@ -45,12 +45,12 @@ function saveSession(user: User | null) {
 // --- unlocked compounds ---
 function loadUnlocked(): Set<string> {
   try {
-    const raw = localStorage.getItem('chem-unlocked');
+    const raw = localStorage.getItem('chem-unlocked-guest');
     return raw ? new Set(JSON.parse(raw)) : new Set();
   } catch { return new Set(); }
 }
 function saveUnlocked(ids: Set<string>) {
-  localStorage.setItem('chem-unlocked', JSON.stringify([...ids]));
+  localStorage.setItem('chem-unlocked-guest', JSON.stringify([...ids]));
 }
 
 interface GameState {
@@ -165,6 +165,14 @@ async function requestAuth(path: 'login' | 'signup', username: string, password:
   return response.json() as Promise<AuthResponse>;
 }
 
+async function syncUnlockedIds(token?: string): Promise<Set<string>> {
+  if (!token) {
+    return loadUnlocked();
+  }
+
+  return new Set(await fetchUnlockedCompoundIds(token));
+}
+
 export const useGameStore = create<GameState>((set, get) => ({
   phase: savedSession ? 'mode-menu' : 'auth-landing',
   user: savedSession,
@@ -197,8 +205,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const data = await requestAuth('login', username, password);
       const user: User = { name: data.username, token: data.token, isGuest: false };
+      const unlockedIds = await syncUnlockedIds(data.token);
       saveSession(user);
-      set({ user, phase: 'mode-menu', authError: '', authPending: false });
+      set({ user, unlockedIds, phase: 'mode-menu', authError: '', authPending: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : '로그인에 실패했어요.';
       set({ authError: message, authPending: false });
@@ -211,8 +220,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const data = await requestAuth('signup', username, password);
       const user: User = { name: data.username, token: data.token, isGuest: false };
+      const unlockedIds = await syncUnlockedIds(data.token);
       saveSession(user);
-      set({ user, phase: 'mode-menu', authError: '', authPending: false });
+      set({ user, unlockedIds, phase: 'mode-menu', authError: '', authPending: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : '회원가입에 실패했어요.';
       set({ authError: message, authPending: false });
@@ -226,15 +236,24 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   logout: () => {
     saveSession(null);
-    set({ user: null, phase: 'auth-landing', authError: '', authPending: false, doganReturnPhase: 'menu' });
+    set({
+      user: null,
+      unlockedIds: loadUnlocked(),
+      phase: 'auth-landing',
+      authError: '',
+      authPending: false,
+      doganReturnPhase: 'menu',
+    });
   },
 
   loadCompounds: async (difficulty) => {
     set({ compoundsPending: true, compoundsError: '' });
 
     try {
+      const unlockedIds = await syncUnlockedIds(get().user?.token);
       const data = await fetchCompounds(difficulty);
       set({
+        unlockedIds,
         compounds: difficulty ? get().compounds : data.items,
         compoundsTotal: difficulty ? get().compoundsTotal : data.total,
         compoundsPending: false,
@@ -255,6 +274,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   startSandbox: async () => {
     set({ compoundsPending: true, compoundsError: '' });
 
+    const unlockedIds = await syncUnlockedIds(get().user?.token).catch(() => get().unlockedIds);
     const existingCompounds = get().compounds;
     const items = existingCompounds.length > 0 ? existingCompounds : await fetchCompounds().then(data => data.items).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : '샌드박스 데이터를 불러오지 못했어요.';
@@ -282,6 +302,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       score: 0,
       stage: 0,
       mimicCountdown: 0,
+      unlockedIds,
       doganReturnPhase: 'playing',
     });
   },
@@ -289,6 +310,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   startGame: async (difficulty) => {
     set({ compoundsPending: true, compoundsError: '' });
 
+    const unlockedIds = await syncUnlockedIds(get().user?.token).catch(() => get().unlockedIds);
     const data = await fetchCompounds(difficulty).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : '문제 목록을 불러오지 못했어요.';
       set({ compoundsPending: false, compoundsError: message });
@@ -318,6 +340,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       score: 0,
       stage: 1,
       mimicCountdown: 3,
+      unlockedIds,
       doganReturnPhase: difficulty === 'mimic' ? 'mimic-preview' : 'playing',
     });
   },
@@ -333,7 +356,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   resetTray: () => set({ trayElements: [] }),
 
   checkAnswer: () => {
-    const { currentCompound, trayElements, score, lives, unlockedIds, playMode, compounds } = get();
+    const { currentCompound, trayElements, score, lives, unlockedIds, playMode, compounds, user } = get();
 
     const answer: Record<string, number> = {};
     trayElements.forEach(e => { answer[e] = (answer[e] ?? 0) + 1; });
@@ -344,7 +367,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       const next = new Set(unlockedIds);
       next.add(matchedCompound.id);
-      saveUnlocked(next);
+      if (user?.token) {
+        void unlockCompound(matchedCompound.id, user.token).catch(() => undefined);
+      } else {
+        saveUnlocked(next);
+      }
       set({
         currentCompound: matchedCompound,
         phase: 'success',
@@ -359,7 +386,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (correct) {
       const next = new Set(unlockedIds);
       next.add(currentCompound.id);
-      saveUnlocked(next);
+      if (user?.token) {
+        void unlockCompound(currentCompound.id, user.token).catch(() => undefined);
+      } else {
+        saveUnlocked(next);
+      }
       set({
         phase: 'success',
         score: score + (playMode === 'hardcore' ? HARDCORE_STAGE_SCORE : DEFAULT_STAGE_SCORE),
