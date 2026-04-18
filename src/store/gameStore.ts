@@ -21,6 +21,7 @@ export interface User {
   name: string;
   token?: string;
   isGuest: boolean;
+  points: number;
 }
 
 export type PlayMode = 'normal' | 'hardcore' | 'sandbox';
@@ -49,6 +50,7 @@ function loadSession(): User | null {
       name: raw.name,
       token: typeof raw.token === 'string' ? raw.token : undefined,
       isGuest: raw.isGuest,
+      points: typeof raw.points === 'number' ? raw.points : 0,
     };
   } catch {
     return null;
@@ -159,6 +161,7 @@ const savedSession = loadSession();
 interface AuthResponse {
   token: string;
   username: string;
+  points?: number;
 }
 
 async function requestAuth(path: 'login' | 'signup', username: string, password: string): Promise<AuthResponse> {
@@ -241,7 +244,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     try {
       const data = await requestAuth('login', username, password);
-      const user: User = { name: data.username, token: data.token, isGuest: false };
+      const user: User = { name: data.username, token: data.token, isGuest: false, points: data.points ?? 0 };
       const unlockedIds = await syncUnlockedIds(data.token);
       saveSession(user);
       set({ user, unlockedIds, phase: 'mode-menu', authError: '', authPending: false });
@@ -256,7 +259,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     try {
       const data = await requestAuth('signup', username, password);
-      const user: User = { name: data.username, token: data.token, isGuest: false };
+      const user: User = { name: data.username, token: data.token, isGuest: false, points: data.points ?? 0 };
       const unlockedIds = await syncUnlockedIds(data.token);
       saveSession(user);
       set({ user, unlockedIds, phase: 'mode-menu', authError: '', authPending: false });
@@ -267,7 +270,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   loginAsGuest: () => {
-    const user: User = { name: '게스트', isGuest: true };
+    const user: User = { name: '게스트', isGuest: true, points: 0 };
+    saveSession(user);
     set({
       user,
       phase: 'mode-menu',
@@ -467,6 +471,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       const next = new Set(unlockedIds);
       next.add(currentCompound.id);
       const isLastStage = get().remainingCompounds.length === 0;
+      const stageScore = playMode === 'hardcore' ? HARDCORE_STAGE_SCORE : DEFAULT_STAGE_SCORE;
+      const nextScore = score + stageScore;
+
+      if (isLastStage && user) {
+        const nextUser = { ...user, points: user.points + nextScore };
+        saveSession(nextUser);
+        set({ user: nextUser });
+      }
+
       if (user?.token) {
         void unlockCompound(currentCompound.id, user.token).catch(() => undefined);
         if (currentCompound.hall_of_fame_item_id) {
@@ -480,7 +493,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       set({
         phase: 'success',
-        score: score + (playMode === 'hardcore' ? HARDCORE_STAGE_SCORE : DEFAULT_STAGE_SCORE),
+        score: nextScore,
         unlockedIds: next,
       });
 
