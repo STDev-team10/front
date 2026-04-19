@@ -1,3 +1,51 @@
+.bgmToggle {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 140;
+  width: 54px;
+  height: 54px;
+  border: 2.5px solid #5C3D2E;
+  border-radius: 999px;
+  background: rgba(255, 248, 240, 0.96);
+  color: #5C3D2E;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  backdrop-filter: blur(8px);
+}
+
+.bgmToggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.bgmToggle:active {
+  transform: translateY(1px);
+}
+
+.bgmToggle:focus-visible {
+  outline: 3px solid rgba(232, 115, 106, 0.5);
+  outline-offset: 2px;
+}
+
+.bgmToggleIcon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .bgmToggle {
+    right: 14px;
+    bottom: 14px;
+    width: 50px;
+    height: 50px;
+  }
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

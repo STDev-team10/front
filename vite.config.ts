@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const API_ORIGINS = ['http://localhost:8080', 'http://3.34.140.204:8080'] as const
+const API_ORIGINS = ['http://localhost:8080', 'http://43.202.60.95:8080'] as const
 
 // https://vite.dev/config/
 export default defineConfig({
