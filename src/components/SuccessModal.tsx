@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { fetchCompoundExplanation } from '../api/ask';
 import MoleculeViewer from './MoleculeViewer';
@@ -38,7 +38,6 @@ export default function SuccessModal() {
 
   const [aiExplanation, setAiExplanation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const clearSfxRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!isSuccess || !compound) return;
@@ -51,27 +50,15 @@ export default function SuccessModal() {
   }, [compound?.name, isSuccess]);
 
   useEffect(() => {
-    if (!isLifeGameOver) {
-      const current = clearSfxRef.current;
-      if (current) {
-        current.pause();
-        current.currentTime = 0;
-        clearSfxRef.current = null;
-      }
-      return;
-    }
+    if (!isLifeGameOver) return;
 
-    const audio = new Audio('/audio/button-click.mp3');
+    const audio = new Audio('/audio/game-over.mp3');
     audio.volume = 0.55;
-    clearSfxRef.current = audio;
     void audio.play().catch(() => undefined);
 
     return () => {
       audio.pause();
       audio.currentTime = 0;
-      if (clearSfxRef.current === audio) {
-        clearSfxRef.current = null;
-      }
     };
   }, [isLifeGameOver]);
 

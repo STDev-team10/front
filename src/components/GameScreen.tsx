@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { DIFFICULTY_LABELS } from '../data/compounds';
 import ElementTile from './ElementTile';
@@ -22,19 +21,6 @@ export default function GameScreen() {
   const goToMenu = useGameStore(s => s.goToMenu);
   const goToModeMenu = useGameStore(s => s.goToModeMenu);
   const openDogan = useGameStore(s => s.openDogan);
-  const elementSelectSfxRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    const audio = new Audio('/audio/element_select_click.wav');
-    audio.volume = 0.45;
-    elementSelectSfxRef.current = audio;
-
-    return () => {
-      audio.pause();
-      audio.currentTime = 0;
-      elementSelectSfxRef.current = null;
-    };
-  }, []);
 
   if (playMode !== 'sandbox' && (!compound || !difficulty)) return null;
 
@@ -44,11 +30,9 @@ export default function GameScreen() {
   const showFormula = playMode !== 'hardcore' && !isSandbox;
 
   const handleElementSelect = (symbol: string) => {
-    const audio = elementSelectSfxRef.current;
-    if (audio) {
-      audio.currentTime = 0;
-      void audio.play().catch(() => undefined);
-    }
+    const audio = new Audio('/audio/element_select_click.wav');
+    audio.volume = 0.45;
+    void audio.play().catch(() => undefined);
     addToTray(symbol);
   };
 
