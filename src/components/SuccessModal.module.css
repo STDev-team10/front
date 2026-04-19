@@ -31,6 +31,18 @@
   gap: 14px;
 }
 
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.actions {
+  margin-top: auto;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
 @keyframes popIn {
   from { transform: scale(0.85); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
@@ -73,6 +85,8 @@
   color: #7A4050;
   margin: 0;
   line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .timeAttackBox {
@@ -183,6 +197,8 @@
   padding: 10px 14px;
   margin: 0;
   text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .aiLabel {

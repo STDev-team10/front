@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { saveEarnedPoints } from '../api/auth';
+import { fetchMe, saveEarnedPoints } from '../api/auth';
 import {
   fetchCompounds,
   fetchMyTimeAttackBest,
@@ -113,6 +113,7 @@ interface GameState {
   signup: (username: string, password: string) => Promise<void>;
   loginAsGuest: () => void;
   logout: () => void;
+  refreshUserProfile: () => Promise<void>;
   loadCompounds: (difficulty?: Difficulty) => Promise<Compound[]>;
   goToModeMenu: () => void;
   goToHallOfFame: () => void;
@@ -305,6 +306,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       timeAttackPending: false,
       timeAttackError: '',
     });
+  },
+
+  refreshUserProfile: async () => {
+    const user = get().user;
+    if (!user?.token || user.isGuest) return;
+
+    try {
+      const profile = await fetchMe(user.token);
+      set(state => {
+        if (!state.user) return state;
+        const nextUser = {
+          ...state.user,
+          name: profile.username,
+          points: profile.points,
+        };
+        saveSession(nextUser);
+        return { user: nextUser };
+      });
+    } catch {
+      // Keep the existing session value when the refresh fails.
+    }
   },
 
   loadCompounds: async (difficulty) => {

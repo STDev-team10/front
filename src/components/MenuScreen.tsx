@@ -31,6 +31,7 @@ export default function MenuScreen() {
   const openDogan = useGameStore(s => s.openDogan);
   const goToModeMenu = useGameStore(s => s.goToModeMenu);
   const logout = useGameStore(s => s.logout);
+  const refreshUserProfile = useGameStore(s => s.refreshUserProfile);
   const user = useGameStore(s => s.user);
   const playMode = useGameStore(s => s.playMode);
   const unlockedIds = useGameStore(s => s.unlockedIds);
@@ -39,6 +40,11 @@ export default function MenuScreen() {
   const compoundsPending = useGameStore(s => s.compoundsPending);
   const compoundsError = useGameStore(s => s.compoundsError);
   const unlockedCount = compounds.filter(c => unlockedIds.has(c.id)).length;
+
+  useEffect(() => {
+    if (phase !== 'menu' || !user?.token || user.isGuest) return;
+    void refreshUserProfile();
+  }, [phase, refreshUserProfile, user?.isGuest, user?.token]);
 
   const getMyRankingItem = (data: TimeAttackRankingResponse | null) => {
     if (!data) return null;

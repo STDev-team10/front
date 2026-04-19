@@ -61,108 +61,124 @@ export default function SuccessModal() {
       <div className={styles.card}>
         {isSuccess && (
           <>
-            <MoleculeViewer
-              compoundId={compound.id}
-              fallbackEmoji={compound.emoji}
-            />
-            <h2 className={styles.compoundName}>{compound.name}</h2>
-            {showFormula && <p className={styles.formula}>{compound.formula}</p>}
-            <div className={styles.descBox}>
-              <p className={styles.desc}>
-                {isSandbox ? `"${compound.name}" 도감이 해제되었어요!` : `"${compound.description}"`}
-              </p>
-            </div>
-            <div className={styles.aiBox}>
-              {aiLoading && <p className={styles.aiLoading}>✨ AI 설명 불러오는 중...</p>}
-              {!aiLoading && aiExplanation && (
-                <div className={styles.aiText}>
-                  <span className={styles.aiLabel}>AI선생님:</span>
-                  <span>{aiExplanation}</span>
-                </div>
-              )}
-            </div>
-            {showTimeAttack && (
-              <div className={styles.timeAttackBox}>
-                <p className={styles.timeRow}>이번 기록: {formatTime(latestClearTimeMs)}</p>
-                {latestTimeAttackRecord && <p className={styles.timeRow}>현재 순위: {latestTimeAttackRecord.rank}위</p>}
-                {latestTimeAttackRecord && (
-                  <p className={styles.timeRow}>
-                    개인 최고 기록 갱신: {latestTimeAttackRecord.is_personal_best ? '예' : '아니오'}
-                  </p>
-                )}
-                {myTimeAttackBest && <p className={styles.timeRow}>내 최고 기록: {formatTime(myTimeAttackBest.clear_time_ms)}</p>}
-                {timeAttackPending && <p className={styles.timeHint}>랭킹을 불러오는 중이에요...</p>}
-                {timeAttackError && <p className={styles.timeHint}>{timeAttackError}</p>}
-                {!timeAttackPending && timeAttackRanking.length > 0 && (
-                  <div className={styles.rankingBox}>
-                    <p className={styles.rankingTitle}>상위 10명 랭킹</p>
-                    {timeAttackRanking.map(entry => (
-                      <p key={`${entry.user_id}-${entry.rank}-${entry.cleared_at}`} className={styles.rankingRow}>
-                        {entry.rank}. {entry.username} · {formatTime(entry.clear_time_ms)}
-                      </p>
-                    ))}
+            <div className={styles.content}>
+              <MoleculeViewer
+                compoundId={compound.id}
+                fallbackEmoji={compound.emoji}
+              />
+              <h2 className={styles.compoundName}>{compound.name}</h2>
+              {showFormula && <p className={styles.formula}>{compound.formula}</p>}
+              <div className={styles.descBox}>
+                <p className={styles.desc}>
+                  {isSandbox ? `"${compound.name}" 도감이 해제되었어요!` : `"${compound.description}"`}
+                </p>
+              </div>
+              <div className={styles.aiBox}>
+                {aiLoading && <p className={styles.aiLoading}>✨ AI 설명 불러오는 중...</p>}
+                {!aiLoading && aiExplanation && (
+                  <div className={styles.aiText}>
+                    <span className={styles.aiLabel}>AI선생님:</span>
+                    <span>{aiExplanation}</span>
                   </div>
                 )}
               </div>
-            )}
-            {newHallOfFameDiscovery && (
-              <div className={styles.hofBanner}>
-                🏆 명예의 전당 최초 발견!
-                <button className={styles.hofClose} onClick={clearHallOfFameDiscovery}>✕</button>
-              </div>
-            )}
-            <button className={styles.nextBtn} onClick={isSandbox ? dismissResult : hasMore ? nextStage : goToMenu}>
-              {isSandbox ? '계속 실험하기 ›' : hasMore ? '다음 단계 ›' : '메뉴로 돌아가기 ›'}
-            </button>
+              {showTimeAttack && (
+                <div className={styles.timeAttackBox}>
+                  <p className={styles.timeRow}>이번 기록: {formatTime(latestClearTimeMs)}</p>
+                  {latestTimeAttackRecord && <p className={styles.timeRow}>현재 순위: {latestTimeAttackRecord.rank}위</p>}
+                  {latestTimeAttackRecord && (
+                    <p className={styles.timeRow}>
+                      개인 최고 기록 갱신: {latestTimeAttackRecord.is_personal_best ? '예' : '아니오'}
+                    </p>
+                  )}
+                  {myTimeAttackBest && <p className={styles.timeRow}>내 최고 기록: {formatTime(myTimeAttackBest.clear_time_ms)}</p>}
+                  {timeAttackPending && <p className={styles.timeHint}>랭킹을 불러오는 중이에요...</p>}
+                  {timeAttackError && <p className={styles.timeHint}>{timeAttackError}</p>}
+                  {!timeAttackPending && timeAttackRanking.length > 0 && (
+                    <div className={styles.rankingBox}>
+                      <p className={styles.rankingTitle}>상위 10명 랭킹</p>
+                      {timeAttackRanking.map(entry => (
+                        <p key={`${entry.user_id}-${entry.rank}-${entry.cleared_at}`} className={styles.rankingRow}>
+                          {entry.rank}. {entry.username} · {formatTime(entry.clear_time_ms)}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {newHallOfFameDiscovery && (
+                <div className={styles.hofBanner}>
+                  🏆 명예의 전당 최초 발견!
+                  <button className={styles.hofClose} onClick={clearHallOfFameDiscovery}>✕</button>
+                </div>
+              )}
+            </div>
+            <div className={styles.actions}>
+              <button className={styles.nextBtn} onClick={isSandbox ? dismissResult : hasMore ? nextStage : goToMenu}>
+                {isSandbox ? '계속 실험하기 ›' : hasMore ? '다음 단계 ›' : '메뉴로 돌아가기 ›'}
+              </button>
+            </div>
           </>
         )}
 
         {isFail && (
           <>
-            <div className={styles.imgBox}>
-              <span className={styles.emoji}>💔</span>
+            <div className={styles.content}>
+              <div className={styles.imgBox}>
+                <span className={styles.emoji}>💔</span>
+              </div>
+              <h2 className={styles.compoundName}>앗, 틀렸어요!</h2>
+              {showFormula && <p className={styles.formula}>{compound.formula}</p>}
+              <div className={styles.descBox}>
+                <p className={styles.desc}>
+                  정답은 {Object.entries(compound.elements).map(([e, c]) => `${e}×${c}`).join(', ')} 입니다.
+                </p>
+              </div>
             </div>
-            <h2 className={styles.compoundName}>앗, 틀렸어요!</h2>
-            {showFormula && <p className={styles.formula}>{compound.formula}</p>}
-            <div className={styles.descBox}>
-              <p className={styles.desc}>
-                정답은 {Object.entries(compound.elements).map(([e, c]) => `${e}×${c}`).join(', ')} 입니다.
-              </p>
+            <div className={styles.actions}>
+              <button className={styles.nextBtn} onClick={nextStage}>
+                다음 문제 도전 ›
+              </button>
             </div>
-            <button className={styles.nextBtn} onClick={nextStage}>
-              다음 문제 도전 ›
-            </button>
           </>
         )}
 
         {isLifeGameOver && (
           <>
-            <div className={styles.imgBox}>
-              <span className={styles.emoji}>☠️</span>
+            <div className={styles.content}>
+              <div className={styles.imgBox}>
+                <span className={styles.emoji}>☠️</span>
+              </div>
+              <h2 className={styles.compoundName}>게임 오버!</h2>
+              {showFormula && <p className={styles.formula}>{compound.formula}</p>}
+              <div className={styles.descBox}>
+                <p className={styles.desc}>
+                  정답은 {Object.entries(compound.elements).map(([e, c]) => `${e}×${c}`).join(', ')} 입니다.
+                </p>
+              </div>
             </div>
-            <h2 className={styles.compoundName}>게임 오버!</h2>
-            {showFormula && <p className={styles.formula}>{compound.formula}</p>}
-            <div className={styles.descBox}>
-              <p className={styles.desc}>
-                정답은 {Object.entries(compound.elements).map(([e, c]) => `${e}×${c}`).join(', ')} 입니다.
-              </p>
+            <div className={styles.actions}>
+              <button className={styles.nextBtn} onClick={goToMenu}>
+                메뉴로 돌아가기
+              </button>
             </div>
-            <button className={styles.nextBtn} onClick={goToMenu}>
-              메뉴로 돌아가기
-            </button>
           </>
         )}
 
         {isStageClear && (
           <>
-            <div className={styles.imgBox}>
-              <span className={styles.emoji}>🎉</span>
+            <div className={styles.content}>
+              <div className={styles.imgBox}>
+                <span className={styles.emoji}>🎉</span>
+              </div>
+              <h2 className={styles.compoundName}>게임 완료!</h2>
+              <p className={styles.formula}>모든 단계를 클리어했어요!</p>
             </div>
-            <h2 className={styles.compoundName}>게임 완료!</h2>
-            <p className={styles.formula}>모든 단계를 클리어했어요!</p>
-            <button className={styles.nextBtn} onClick={goToMenu}>
-              메뉴로 돌아가기
-            </button>
+            <div className={styles.actions}>
+              <button className={styles.nextBtn} onClick={goToMenu}>
+                메뉴로 돌아가기
+              </button>
+            </div>
           </>
         )}
       </div>

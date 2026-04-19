@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchPointsRanking, type PointsRankingResponse } from '../api/auth';
 import { type PlayMode, useGameStore } from '../store/gameStore';
 import styles from './ModeSelectScreen.module.css';
@@ -41,9 +41,16 @@ export default function ModeSelectScreen() {
   const [pointsError, setPointsError] = useState('');
   const user = useGameStore(s => s.user);
   const logout = useGameStore(s => s.logout);
+  const phase = useGameStore(s => s.phase);
+  const refreshUserProfile = useGameStore(s => s.refreshUserProfile);
   const goToHallOfFame = useGameStore(s => s.goToHallOfFame);
   const selectPlayMode = useGameStore(s => s.selectPlayMode);
   const startSandbox = useGameStore(s => s.startSandbox);
+
+  useEffect(() => {
+    if (phase !== 'mode-menu' || !user?.token || user.isGuest) return;
+    void refreshUserProfile();
+  }, [phase, refreshUserProfile, user?.isGuest, user?.token]);
 
   const openPointsRanking = () => {
     if (!user?.token || user.isGuest) return;

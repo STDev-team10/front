@@ -5,6 +5,11 @@ export interface PointsRankingEntry {
   points: number;
 }
 
+export interface MeResponse {
+  username: string;
+  points: number;
+}
+
 export interface PointsRankingResponse {
   items: PointsRankingEntry[];
   total: number;
@@ -13,6 +18,20 @@ export interface PointsRankingResponse {
 
 interface UpdatePointsResponse {
   points: number;
+}
+
+export async function fetchMe(token: string): Promise<MeResponse> {
+  const response = await fetch('/api/auth/me', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('내 정보를 불러오지 못했어요.');
+  }
+
+  return response.json() as Promise<MeResponse>;
 }
 
 export async function fetchPointsRanking(token?: string, limit = 5): Promise<PointsRankingResponse> {
