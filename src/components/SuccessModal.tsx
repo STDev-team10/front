@@ -34,6 +34,7 @@ export default function SuccessModal() {
   const isSuccess = phase === 'success';
   const isGameOver = phase === 'gameover';
   const isStageClear = isGameOver && lives > 0;
+  const isLifeGameOver = isGameOver && lives <= 0;
 
   const [aiExplanation, setAiExplanation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -79,7 +80,6 @@ export default function SuccessModal() {
   const hasMore = remainingCompounds.length > 0;
   const showFormula = playMode !== 'hardcore';
   const isSandbox = playMode === 'sandbox';
-  const isLifeGameOver = isGameOver && lives <= 0;
   const showTimeAttack = isSuccess && !isSandbox && !user?.isGuest && latestClearTimeMs !== null;
 
   return (
