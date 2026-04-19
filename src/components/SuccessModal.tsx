@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { fetchCompoundExplanation } from '../api/ask';
 import MoleculeViewer from './MoleculeViewer';
@@ -33,9 +33,11 @@ export default function SuccessModal() {
 
   const isSuccess = phase === 'success';
   const isGameOver = phase === 'gameover';
+  const isStageClear = isGameOver && lives > 0;
 
   const [aiExplanation, setAiExplanation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const clearSfxRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!isSuccess || !compound) return;
@@ -47,13 +49,37 @@ export default function SuccessModal() {
       .finally(() => setAiLoading(false));
   }, [compound?.name, isSuccess]);
 
+  useEffect(() => {
+    if (!isLifeGameOver) {
+      const current = clearSfxRef.current;
+      if (current) {
+        current.pause();
+        current.currentTime = 0;
+        clearSfxRef.current = null;
+      }
+      return;
+    }
+
+    const audio = new Audio('/audio/button-click.mp3');
+    audio.volume = 0.55;
+    clearSfxRef.current = audio;
+    void audio.play().catch(() => undefined);
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (clearSfxRef.current === audio) {
+        clearSfxRef.current = null;
+      }
+    };
+  }, [isLifeGameOver]);
+
   if (!compound || (phase !== 'success' && phase !== 'gameover' && phase !== 'fail')) return null;
   const isFail = phase === 'fail';
   const hasMore = remainingCompounds.length > 0;
   const showFormula = playMode !== 'hardcore';
   const isSandbox = playMode === 'sandbox';
   const isLifeGameOver = isGameOver && lives <= 0;
-  const isStageClear = isGameOver && lives > 0;
   const showTimeAttack = isSuccess && !isSandbox && !user?.isGuest && latestClearTimeMs !== null;
 
   return (
