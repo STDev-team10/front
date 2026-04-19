@@ -13,6 +13,7 @@ export default function App() {
   const phase = useGameStore(s => s.phase);
   const loadCompounds = useGameStore(s => s.loadCompounds);
   const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const clickSfxRef = useRef<HTMLAudioElement | null>(null);
   const [bgmEnabled, setBgmEnabled] = useState(() => {
     try {
       return localStorage.getItem('chem-bgm-enabled') !== 'false';
@@ -51,6 +52,32 @@ export default function App() {
       audio.pause();
       audio.currentTime = 0;
       bgmRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const clickAudio = new Audio('/audio/button-click.mp3');
+    clickAudio.volume = 0.55;
+    clickSfxRef.current = clickAudio;
+
+    const playClickSound = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (!target.closest('button')) return;
+
+      const audio = clickSfxRef.current;
+      if (!audio) return;
+      audio.currentTime = 0;
+      void audio.play().catch(() => undefined);
+    };
+
+    window.addEventListener('pointerdown', playClickSound);
+
+    return () => {
+      window.removeEventListener('pointerdown', playClickSound);
+      clickAudio.pause();
+      clickAudio.currentTime = 0;
+      clickSfxRef.current = null;
     };
   }, []);
 
