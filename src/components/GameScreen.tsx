@@ -27,7 +27,9 @@ export default function GameScreen() {
   const showModal = phase === 'success' || phase === 'fail' || phase === 'gameover';
   const maxLives = playMode === 'hardcore' ? 1 : 3;
   const isSandbox = playMode === 'sandbox';
+  const isMimic = difficulty === 'mimic';
   const showFormula = playMode !== 'hardcore' && !isSandbox;
+  const showTargetCard = !isSandbox && !isMimic;
 
   const handleElementSelect = (symbol: string) => {
     const audio = new Audio('/audio/element_select_click.wav');
@@ -69,13 +71,13 @@ export default function GameScreen() {
 
       {isSandbox ? (
         <p className={styles.sandboxHint}>문제 없이 자유롭게 조합해보고, 막히면 도감을 바로 열어보세요.</p>
-      ) : (
+      ) : showTargetCard ? (
         <div className={styles.target}>
           <div className={styles.targetLabel}>TARGET COMPOUND · STAGE {stage}</div>
           <div className={styles.targetName}>[{compound!.name}]</div>
           {showFormula && <div className={styles.targetFormula}>{compound!.formula}</div>}
         </div>
-      )}
+      ) : null}
 
       {/* Elements row */}
       <div className={styles.elements}>
