@@ -55,6 +55,24 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const playButtonClick = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (!target.closest('button')) return;
+
+      const audio = new Audio('/audio/button-click.mp3');
+      audio.volume = 0.5;
+      void audio.play().catch(() => undefined);
+    };
+
+    window.addEventListener('pointerdown', playButtonClick);
+
+    return () => {
+      window.removeEventListener('pointerdown', playButtonClick);
+    };
+  }, []);
+
+  useEffect(() => {
     try {
       localStorage.setItem('chem-bgm-enabled', String(bgmEnabled));
     } catch {

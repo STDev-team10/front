@@ -154,6 +154,10 @@ function getSandboxElements(compounds: Compound[]) {
   return elements;
 }
 
+function getShuffledAvailableElements(compound: Compound) {
+  return shuffle(normalizeCompound(compound).available_elements);
+}
+
 function matchesCompound(compound: Compound, answer: Record<string, number>) {
   const target = compound.elements;
   const keys = new Set([...Object.keys(answer), ...Object.keys(target)]);
@@ -380,7 +384,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       difficulty: null,
       currentCompound: null,
       remainingCompounds: [],
-      availableElements: getSandboxElements(items),
+      availableElements: shuffle(getSandboxElements(items)),
       trayElements: [],
       lives: 0,
       score: 0,
@@ -425,7 +429,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       difficulty,
       currentCompound: first,
       remainingCompounds: compounds.slice(1),
-      availableElements: normalizeCompound(first).available_elements,
+      availableElements: getShuffledAvailableElements(first),
       trayElements: [],
       lives: playMode === 'hardcore' ? HARDCORE_LIVES : DEFAULT_LIVES,
       score: 0,
@@ -599,7 +603,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       phase: difficulty === 'mimic' ? 'mimic-preview' : 'playing',
       currentCompound: next,
       remainingCompounds: remainingCompounds.slice(1),
-      availableElements: next.available_elements,
+      availableElements: getShuffledAvailableElements(next),
       trayElements: [],
       stage: stage + 1,
       mimicCountdown: 3,
